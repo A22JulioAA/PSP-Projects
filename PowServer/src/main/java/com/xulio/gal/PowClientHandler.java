@@ -31,7 +31,7 @@ public class PowClientHandler implements Runnable {
                 out.println("The pow of " + line + " is: " + pow);
             }
         } catch (IOException e) {
-            System.out.println("sacabao");
+            System.out.println("Error: " + e.getMessage());
         } finally {
             if (out != null) {
                 out.close();
