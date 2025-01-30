@@ -22,9 +22,7 @@ public class GuessGameClientHandler implements Runnable {
         ) {
 
             out.println(ServerResponses.SERVER_READY.getCODE() + " " + ServerResponses.SERVER_READY.getDESCRIPTION());
-            out.println("Welcome!");
-
-            showMainMenu(out);
+            //showMainMenu(out);
 
             String command;
 
@@ -72,33 +70,44 @@ public class GuessGameClientHandler implements Runnable {
     }
 
     // Function to show HELP message.
-    protected void showHelpMessage (PrintWriter out) {
-        String message = "--------------- HELP ---------------\n" +
-                "NEW -> New game. It accepts a parameter, the number of tries you want to guess the number.\n" +
-                "Example: NEW 8\n" +
-                "NUM -> The guess number. A game must be created before this command.\n" +
-                "Example: NUM 44\n" +
-                "HELP -> Menu to display help information.\n" +
-                "QUIT -> Exit the program.\n";
+    protected void showHelpMessage(PrintWriter out) {
+        out.println(ServerResponses.INFO.getResponse() +
+                "--------------- HELP --------------- " +
+                "Available commands: " +
+                "NEW  -> Start a new game. It accepts a parameter, the number of tries you want to guess the number. Example: NEW 8 " +
+                "NUM  -> The guess number. A game must be created before this command. Example: NUM 44 " +
+                "HELP -> Show help information. " +
+                "QUIT -> Exit the program. " +
+                "------------------------------------");
 
-        out.println(message);
+
     }
 
+    // Function to start a new game.
     protected void startNewGame (BufferedReader in, PrintWriter out, int tries) throws IOException {
         this.numberGuessGame = new NumberGuessGame();
 
         System.out.println("Guess number to player " + clientSocket.getInetAddress() +
                 " is: " + numberGuessGame.getNumberToGuess());
 
-        out.println(ServerResponses.PLAY.getCODE() + " " + ServerResponses.PLAY.getDESCRIPTION() + "< " + tries + " >");
+        out.println(ServerResponses.PLAY.getResponse() + " < " + tries + " >");
 
         while (!numberGuessGame.isGuessed()) {
-            if (tries > 0) {
-                out.println("Guess the number...");
-                out.flush();
-
+            if (tries >= 0) {
                 String line;
                 line = in.readLine();
+
+                if (line != null && line.equalsIgnoreCase("QUIT")) {
+                    exitServer(out);
+
+                    return;
+                }
+
+                if (line != null && line.toUpperCase().startsWith("NEW")) {
+                    out.println(ServerResponses.ERR.getResponse());
+
+                    continue;
+                }
 
                 if (line != null && line.toUpperCase().startsWith("NUM ")) {
                     String[] parts = line.split(" ");
@@ -109,27 +118,24 @@ public class GuessGameClientHandler implements Runnable {
                             String response = numberGuessGame.guess(guess, tries);
                             out.println(response);
                         } catch (NumberFormatException e) {
-                            out.println("Invalid");
-                            out.println(ServerResponses.SERVER_READY_BEFORE_ERROR.getCODE() + " " +
-                                    ServerResponses.SERVER_READY_BEFORE_ERROR.getDESCRIPTION());
+                            out.println(ServerResponses.SERVER_READY_BEFORE_ERROR.getResponse());
                         }
                     }
                 } else {
-                    out.println("Invalid Format");
-                    out.println(ServerResponses.SERVER_READY_BEFORE_ERROR.getCODE() + " " +
-                            ServerResponses.SERVER_READY_BEFORE_ERROR.getDESCRIPTION());
+                    out.println(ServerResponses.SERVER_READY_BEFORE_ERROR.getResponse());
                 }
 
                 tries--;
             } else {
-                out.println(ServerResponses.LOSE_NUM.getCODE() + " " + ServerResponses.LOSE_NUM.getDESCRIPTION() +
-                        "< " + numberGuessGame.getNumberToGuess() + ">");
+                out.println(ServerResponses.LOSE_NUM.getResponse() +
+                        " < " + numberGuessGame.getNumberToGuess() + " >");
                 break;
             }
 
         }
     }
 
+    // Function to start a new game with X tries.
     protected void handleNewCommandWithTries (BufferedReader in, PrintWriter out, String command) {
         String[] parts = command.split(" ");
 
@@ -146,17 +152,17 @@ public class GuessGameClientHandler implements Runnable {
                 out.println("Invalid number of tries. Please enter a valid number");
             }
         } else {
-            out.println(ServerResponses.UNKNOWN.getCODE() + " " + ServerResponses.UNKNOWN.getDESCRIPTION());
+            out.println(ServerResponses.UNKNOWN.getResponse());
         }
     }
 
+    // Function to exit server.
     protected void exitServer (PrintWriter out) {
-        out.println(ServerResponses.BYE.getCODE() + " " + ServerResponses.BYE.getDESCRIPTION());
+        out.println(ServerResponses.BYE.getResponse());
     }
 
     protected void setErrorOnClient (PrintWriter out, String command) {
-        out.println(ServerResponses.UNKNOWN.getCODE() + " " + ServerResponses.UNKNOWN.getDESCRIPTION());
-        out.println("'" + command + "' is incorrect...");
+        out.println(ServerResponses.UNKNOWN.getResponse());
     }
 }
 

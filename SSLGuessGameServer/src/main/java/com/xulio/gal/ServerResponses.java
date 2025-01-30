@@ -5,8 +5,8 @@ public enum ServerResponses {
     BYE (11, "BYE"),
     SERVER_READY_BEFORE_ERROR (15, "Game server ready before communication error"),
     PLAY (20, "The game starts with X tries"),
-    LOW (25, "The client guess is lower than the number"),
-    HIGH (35, "The client guess is higher than the number"),
+    LOW (25, "Your guess is lower than the number"),
+    HIGH (35, "Your guess is higher than the number"),
     INFO (40, "Informs the client about the game"),
     WIN (50, "The client win the game"),
     LOSE_NUM (70, "The client has no more attempts to guess the number"),
@@ -28,4 +28,6 @@ public enum ServerResponses {
     public String getDESCRIPTION() {
         return DESCRIPTION;
     }
+
+    public String getResponse () { return CODE + " " + DESCRIPTION; }
 }
