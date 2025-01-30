@@ -23,7 +23,8 @@ public class GuessGameClientHandler implements Runnable {
 
             out.println(ServerResponses.SERVER_READY.getCODE() + " " + ServerResponses.SERVER_READY.getDESCRIPTION());
             out.println("Welcome!");
-            out.println("Introduce your commands to play! If you don't know how game works, enter 'HELP'");
+
+            showMainMenu(out);
 
             String command;
 
@@ -31,8 +32,6 @@ public class GuessGameClientHandler implements Runnable {
                 switch (command.toUpperCase()) {
                     case "NEW":
                         startNewGame(in, out, 6);
-                        break;
-                    case "NUM":
                         break;
                     case "HELP":
                         showHelpMessage(out);
@@ -61,7 +60,16 @@ public class GuessGameClientHandler implements Runnable {
     }
 
     // Function to display Initial Menu.
-    protected void showMainMenu ( )
+    protected void showMainMenu (PrintWriter out) {
+        out.println("------------ GUESS GAME MENU ------------");
+        out.println("Available commands:");
+        out.println("NEW       -> Start a new game with default tries (6).");
+        out.println("NEW X     -> Start a new game with X tries.");
+        out.println("HELP      -> Show help information.");
+        out.println("QUIT      -> Exit the game.");
+        out.println("-----------------------------------------");
+        out.println("Enter your command:");
+    }
 
     // Function to show HELP message.
     protected void showHelpMessage (PrintWriter out) {

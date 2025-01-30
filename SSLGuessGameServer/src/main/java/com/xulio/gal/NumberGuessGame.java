@@ -15,9 +15,9 @@ public class NumberGuessGame {
 
             return ServerResponses.WIN.getCODE() + " " + ServerResponses.WIN.getDESCRIPTION();
         } else if (number > numberToGuess) {
-            return ServerResponses.HIGH.getCODE() + " " + ServerResponses.HIGH.getDESCRIPTION() + "< " + tries + " >\n";
+            return ServerResponses.HIGH.getCODE() + " " + ServerResponses.HIGH.getDESCRIPTION() + " < " + tries + " >\n";
         } else {
-            return ServerResponses.LOW.getCODE() + " " + ServerResponses.LOW.getDESCRIPTION() + "< " + tries + " >\n";
+            return ServerResponses.LOW.getCODE() + " " + ServerResponses.LOW.getDESCRIPTION() + " < " + tries + " >\n";
         }
     }
 
