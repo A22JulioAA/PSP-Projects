@@ -5,10 +5,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GuessGameClientHandler implements Runnable {
     private Socket clientSocket;
     private NumberGuessGame numberGuessGame;
+
+    private static Logger logger = Logger.getLogger(GuessGameClientHandler.class.getName());
 
     public GuessGameClientHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
@@ -35,7 +39,7 @@ public class GuessGameClientHandler implements Runnable {
                         showHelpMessage(out);
                         break;
                     case "QUIT":
-                        exitServer(out);
+                        exitServer(out, clientSocket);
                         return;
                     default:
                         if (command.toUpperCase().startsWith("NEW ")) {
@@ -47,12 +51,13 @@ public class GuessGameClientHandler implements Runnable {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            logger.log(Level.SEVERE, e.getMessage());
         } finally {
             try {
+                SSLGuessGameServer.activeConnections.decrementAndGet();
                 clientSocket.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.log(Level.SEVERE, e.getMessage());
             }
         }
     }
@@ -60,14 +65,14 @@ public class GuessGameClientHandler implements Runnable {
     // Function to show HELP message.
     protected void showHelpMessage(PrintWriter out) {
         String helpMessage =
-                "--------------- HELP ---------------\n" +
-                        "Available commands:\n" +
-                        "NEW  -> Start a new game. It accepts a parameter, the number of tries you want to guess the number.\n" +
-                        "        Example: NEW 8\n" +
-                        "NUM  -> The guess number. A game must be created before this command.\n" +
-                        "        Example: NUM 44\n" +
-                        "HELP -> Show help information.\n" +
-                        "QUIT -> Exit the program.\n" +
+                "--------------- HELP ---------------" +
+                        "Available commands:" +
+                        "NEW  -> Start a new game. It accepts a parameter, the number of tries you want to guess the number." +
+                        "        Example: NEW 8" +
+                        "NUM  -> The guess number. A game must be created before this command." +
+                        "        Example: NUM 44" +
+                        "HELP -> Show help information." +
+                        "QUIT -> Exit the program." +
                         "------------------------------------";
 
         out.println(helpMessage);
@@ -84,11 +89,14 @@ public class GuessGameClientHandler implements Runnable {
 
         while (!numberGuessGame.isGuessed()) {
             if (tries >= 0) {
-                String line;
-                line = in.readLine();
+                String line = in.readLine();
+
+                if (line == null || line.trim().isEmpty()) {
+                    continue;
+                }
 
                 if (line != null && line.equalsIgnoreCase("QUIT")) {
-                    exitServer(out);
+                    exitServer(out, clientSocket);
 
                     return;
                 }
@@ -147,8 +155,10 @@ public class GuessGameClientHandler implements Runnable {
     }
 
     // Function to exit server.
-    protected void exitServer (PrintWriter out) {
+    protected void exitServer (PrintWriter out, Socket clientSocket) {
         out.println(ServerResponses.BYE.getResponse());
+
+        System.out.println("Client " + clientSocket.getInetAddress() + " disconnected...");
     }
 
     protected void setErrorOnClient (PrintWriter out, String command) {
