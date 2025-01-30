@@ -9,16 +9,20 @@ public class NumberGuessGame {
         this.guessed = false;
     }
 
-    public String guess (int number) {
+    public String guess (int number, int tries) {
         if (number == numberToGuess) {
             guessed = true;
 
-            return number + " is correct!";
+            return ServerResponses.WIN.getCODE() + " " + ServerResponses.WIN.getDESCRIPTION();
         } else if (number > numberToGuess) {
-            return "The number is lower than " + number;
+            return ServerResponses.HIGH.getCODE() + " " + ServerResponses.HIGH.getDESCRIPTION() + "< " + tries + " >\n";
         } else {
-            return "The number is higher than " + number;
+            return ServerResponses.LOW.getCODE() + " " + ServerResponses.LOW.getDESCRIPTION() + "< " + tries + " >\n";
         }
+    }
+
+    public int getNumberToGuess() {
+        return numberToGuess;
     }
 
     public boolean isGuessed () {
