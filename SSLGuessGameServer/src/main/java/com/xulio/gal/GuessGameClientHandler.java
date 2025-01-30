@@ -21,7 +21,7 @@ public class GuessGameClientHandler implements Runnable {
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         ) {
 
-            out.println(ServerResponses.SERVER_READY.getCODE() + " " + ServerResponses.SERVER_READY.getDESCRIPTION());
+            out.println(ServerResponses.SERVER_READY.getResponse());
             //showMainMenu(out);
 
             String command;
@@ -57,30 +57,20 @@ public class GuessGameClientHandler implements Runnable {
         }
     }
 
-    // Function to display Initial Menu.
-    protected void showMainMenu (PrintWriter out) {
-        out.println("------------ GUESS GAME MENU ------------");
-        out.println("Available commands:");
-        out.println("NEW       -> Start a new game with default tries (6).");
-        out.println("NEW X     -> Start a new game with X tries.");
-        out.println("HELP      -> Show help information.");
-        out.println("QUIT      -> Exit the game.");
-        out.println("-----------------------------------------");
-        out.println("Enter your command:");
-    }
-
     // Function to show HELP message.
     protected void showHelpMessage(PrintWriter out) {
-        out.println(ServerResponses.INFO.getResponse() +
-                "--------------- HELP --------------- " +
-                "Available commands: " +
-                "NEW  -> Start a new game. It accepts a parameter, the number of tries you want to guess the number. Example: NEW 8 " +
-                "NUM  -> The guess number. A game must be created before this command. Example: NUM 44 " +
-                "HELP -> Show help information. " +
-                "QUIT -> Exit the program. " +
-                "------------------------------------");
+        String helpMessage =
+                "--------------- HELP ---------------\n" +
+                        "Available commands:\n" +
+                        "NEW  -> Start a new game. It accepts a parameter, the number of tries you want to guess the number.\n" +
+                        "        Example: NEW 8\n" +
+                        "NUM  -> The guess number. A game must be created before this command.\n" +
+                        "        Example: NUM 44\n" +
+                        "HELP -> Show help information.\n" +
+                        "QUIT -> Exit the program.\n" +
+                        "------------------------------------";
 
-
+        out.println(helpMessage);
     }
 
     // Function to start a new game.
