@@ -16,7 +16,7 @@ public class SSLGuessGameServer {
     private static Logger logger = Logger.getLogger(SSLGuessGameServer.class.getName());
 
     public static void main(String[] args) {
-        System.setProperty("javax.net.ssl.keyStore", "C:\\ServerKeys.jks");
+        System.setProperty("javax.net.ssl.keyStore", "keys/ServerKeys.jks");
         System.setProperty("javax.net.ssl.keyStorePassword", "12345678");
 
         SSLServerSocketFactory sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();

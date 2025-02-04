@@ -19,7 +19,7 @@ public class SSLGuessGameClient {
 
     public static void main(String[] args) {
 
-        System.setProperty("javax.net.ssl.trustStore", "C:\\ClientKeys.jks");
+        System.setProperty("javax.net.ssl.trustStore", "keys/ClientKeys.jks");
         System.setProperty("javax.net.ssl.trustStorePassword", "87654321");
 
         try (
