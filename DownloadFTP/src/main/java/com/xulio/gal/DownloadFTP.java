@@ -10,8 +10,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DownloadFTP {
+    private static final Logger logger = Logger.getLogger(DownloadFTP.class.getName());
+
+    private static final String SERVER = "ftp.scene.org";
+    private static final int PORT = 21;
+    private static final String USER = "anonymous";
+    private static final String DIRECTORY = "/pub";
+
     public static void showServerReplay (FTPClient ftpClient) {
         String[] replies = ftpClient.getReplyStrings();
 
@@ -22,88 +31,104 @@ public class DownloadFTP {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        String server = "ftp.scene.org";
-        int port = 21;
-        String user = "anonymous";
-        String directory = "/pub";
-        Scanner sc = new Scanner(System.in);
-
+    public static FTPClient connectAndLogin () throws IOException {
         FTPClient ftpClient = new FTPClient();
 
-        try {
-            ftpClient.connect(server, port);
-            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+        ftpClient.connect(SERVER, PORT);
+        ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+        ftpClient.enterLocalPassiveMode();
 
-            showServerReplay(ftpClient);
+        showServerReplay(ftpClient);
 
-            int replyCode = ftpClient.getReplyCode();
+        int replyCode = ftpClient.getReplyCode();
 
-            if (!FTPReply.isPositiveCompletion(replyCode)) {
-                System.out.println("Operation failed. Server reply code: " + replyCode);
-                return;
+        if (!FTPReply.isPositiveCompletion(replyCode)) {
+            throw new IOException("Connection failed. Server reply code: " + replyCode);
+        }
+
+        boolean success = ftpClient.login(USER, "");
+        showServerReplay(ftpClient);
+
+        if (!success) {
+            throw new IOException("Could not log in to the server.");
+        }
+
+        System.out.println("Connected to FTP Server!");
+        return ftpClient;
+    }
+
+    public static FTPFile[] listFiles (FTPClient ftpClient) throws IOException {
+        if (!ftpClient.changeWorkingDirectory(DIRECTORY)) {
+            throw new IOException("Could not change directory to: " + DIRECTORY);
+        }
+
+        System.out.println("************* List of Files *************");
+
+        FTPFile[] files = ftpClient.listFiles();
+
+        if (files.length == 0) {
+            throw new IOException("No files found on the FTP server.");
+        }
+
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isFile()) {
+                System.out.println((i + 1) + ". " + files[i].getName() + " -> " + files[i].getSize() + "bytes");
             }
+        }
 
-            ftpClient.enterLocalPassiveMode();
+        return files;
+    }
 
-            boolean success = ftpClient.login(user, "");
+    public static void downloadFile (FTPClient ftpClient, FTPFile file) throws IOException {
+        System.out.println("Downloading: " + file.getName());
 
-            showServerReplay(ftpClient);
-
-            if (!success) {
-                System.out.println("Could not login to the server");
-                return;
-            }
-
-            System.out.println("Connected to FTP server!");
-
-            System.out.println("*************List file*************");
-
-            if (ftpClient.changeWorkingDirectory(directory)) {
-                System.out.println("Changed to directory: " + directory);
+        try (
+                FileOutputStream outputStream = new FileOutputStream(file.getName());
+                ) {
+            if (ftpClient.retrieveFile(file.getName(), outputStream)) {
+                System.out.println("File downloaded successfully: " + file.getName());
             } else {
-                System.out.println("Could not change directory.");
+                throw new IOException("Failed to download the file.");
             }
+        }
+    }
 
-            FTPFile[] files = ftpClient.listFiles();
+    public static void main(String[] args) throws IOException {
+        // Logger to show errors in console
+        logger.setLevel(Level.INFO);
 
-            if (files.length == 0) {
-                System.out.println("The FTP server has no files");
-            }
+        try (
+                Scanner sc = new Scanner(System.in);
+                ) {
+            FTPClient ftpClient = connectAndLogin();
 
-            for (int i = 0; i < files.length; i++) {
-                if (files[i].isFile()) {
-                    System.out.println((i + 1) + ". " + files[i].getName() + " -> " + files[i].getSize() + "bytes");
+            try {
+                FTPFile[] files = listFiles(ftpClient);
+
+                System.out.println("Enter the number of the file to download: ");
+                int choice;
+
+                if (sc.hasNextInt()) {
+                    choice = sc.nextInt();
+                } else {
+                    throw new IllegalArgumentException("Invalid input. Please enter a number.");
                 }
+
+                if (choice < 1 || choice > files.length || !files[choice - 1].isFile()) {
+                    throw new IllegalArgumentException("Invalid selection.");
+                }
+
+                downloadFile(ftpClient, files[choice - 1]);
+            } finally {
+                ftpClient.logout();
+                ftpClient.disconnect();
             }
-
-            System.out.println("Enter the number of the file to download: ");
-            int choice = sc.nextInt();
-
-            if (choice < 1 || choice > files.length || !files[choice - 1].isFile()) {
-                System.out.println("Invalid selection.");
-                return;
-            }
-
-            String selectedFile = files[choice - 1].getName();
-            System.out.println("Downloading: " + selectedFile);
-
-            FileOutputStream outputStream = new FileOutputStream(selectedFile);
-            boolean successFile = ftpClient.retrieveFile(selectedFile, outputStream);
-
-            if (successFile) {
-                System.out.println("File downloaded successfully: " + selectedFile);
-            } else {
-                System.out.println("Failed to download the file.");
-            }
-
         } catch (SocketException e) {
-            throw new RuntimeException(e);
+            System.err.println("Socket error: " + e.getMessage());
         } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            ftpClient.logout();
-            ftpClient.disconnect();
+            System.err.println("I/O error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.err.println("User input error: " + e.getMessage());
         }
 
     }
